@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StudyAI — Intelligent Study Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="header-brand">
+    <div class="logo">L</div>
+    <div>
+      <div class="logo-title">Lumio</div>
+      <div class="logo-sub">Smart Planner</div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="setup">   <span class="ti">◈</span> Setup</button>
+    <button class="tab" data-tab="timetable">      <span class="ti">▦</span> Timetable</button>
+    <button class="tab" data-tab="today">          <span class="ti">◉</span> Today</button>
+    <button class="tab" data-tab="progress">       <span class="ti">◐</span> Progress</button>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-score">
+      <div class="score-dot" id="scoreDot"></div>
+      <span class="score-label">Score</span>
+      <span class="score-val" id="headerScore">0%</span>
+    </div>
+
+    <button class="theme-toggle" id="themeBtn" title="Toggle theme">
+      <span class="th-dk">🌙</span>
+      <span class="th-lt">☀️</span>
+    </button>
+
+    {% if session.username %}
+    <div class="header-user">
+      <div class="user-avatar">{{ session.username[0].upper() }}</div>
+      <span class="user-name">{{ session.username }}</span>
+      <a href="/logout" class="btn-logout">↩ Logout</a>
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+  <!-- ── SETUP ── -->
+  <section id="tab-setup" class="tab-content active">
+    <div class="two-col">
+      <div class="col-main">
+
+        <div class="tip-banner">
+          <div class="tip-icon">💡</div>
+          <div>
+            <div class="tip-label">AI Study Tip</div>
+            <div class="tip-text" id="aiTip">Loading tip…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Your Subjects</h2>
+          <div id="subjectList" class="subject-list">
+            <div class="empty-state">No subjects yet. Add your first one →</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-side">
+
+        <div class="card">
+          <h3 class="form-title">+ Add Subject</h3>
+          <div class="form-group">
+            <label>Subject Name</label>
+            <input type="text" id="inp-name" placeholder="e.g. Chemistry"/>
+          </div>
+          <div class="form-group">
+            <label>Total Study Hours</label>
+            <input type="number" id="inp-hours" min="1" max="100" value="5"/>
+          </div>
+          <div class="form-group">
+            <label>Priority Level</label>
+            <select id="inp-priority">
+              <option value="3">🔴 High — Urgent / Soon</option>
+              <option value="2" selected>🟡 Medium — Within 2 weeks</option>
+              <option value="1">🟢 Low — Plenty of time</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Exam / Deadline Date</label>
+            <input type="date" id="inp-deadline"/>
+          </div>
+          <button class="btn-primary" onclick="addSubject()">Add Subject</button>
+        </div>
+
+        <div class="card">
+          <h3>⏰ Daily Study Hours</h3>
+          <div class="slider-row">
+            <input type="range" id="hoursSlider" min="1" max="12" value="5"
+              oninput="updateHoursDisplay(this.value)"/>
+            <div class="hours-badge" id="hoursBadge">5</div>
+          </div>
+          <div class="slider-hint" id="sliderHint">⚡ Balanced load</div>
+          <button class="btn-save-hours" onclick="saveHours()">Save Hours</button>
+        </div>
+
+        <button class="btn-generate" id="generateBtn" onclick="generatePlan()">
+          <span id="genBtnText">✦ Generate AI Study Plan</span>
+          <div class="spinner hidden" id="genSpinner"></div>
+        </button>
+        <div class="progress-bar-wrap hidden" id="genProgressWrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="genProgressFill"></div>
+          </div>
+          <div class="progress-step-text" id="genStepText"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TIMETABLE ── -->
+  <section id="tab-timetable" class="tab-content">
+    <div class="section-header">
+      <div>
+        <h2>Weekly Timetable</h2>
+        <p class="sub-text">AI-optimised · click sessions to mark done or missed</p>
+      </div>
+      <div class="header-actions">
+        <div class="adjust-banner hidden" id="adjustBanner">
+          ↻ <button onclick="adjustMissed()" class="btn-link">Auto-adjust missed tasks</button>
+        </div>
+        <button class="btn-ghost" onclick="generatePlan()">↻ Regenerate</button>
+      </div>
+    </div>
+    <div class="timetable-grid" id="timetableGrid">
+      <div class="no-plan-msg">Generate your plan from the Setup tab first.</div>
+    </div>
+    <div class="card" id="priorityCard" style="margin-top:22px;display:none">
+      <h3>📊 AI Priority Order</h3>
+      <div id="priorityList" class="priority-list"></div>
+    </div>
+  </section>
+
+  <!-- ── TODAY ── -->
+  <section id="tab-today" class="tab-content">
+    <div class="two-col">
+      <div class="col-main">
+        <div class="section-header">
+          <div>
+            <h2>Today's Tasks</h2>
+            <p class="sub-text" id="todayDate"></p>
+          </div>
+          <button class="btn-adjust hidden" id="adjustBtn" onclick="adjustMissed()">
+            ↻ Adjust Missed
+          </button>
+        </div>
+        <div id="todayList" class="today-list">
+          <div class="no-plan-msg">Generate a plan from Setup first.</div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="card stat-card">
+          <div class="stat-label">Today's Load</div>
+          <div class="stat-value" id="todayLoad">0h</div>
+          <div class="stat-sub" id="todaySessions">0 sessions</div>
+        </div>
+        <div class="card">
+          <h3>Missed Sessions</h3>
+          <div id="missedList"><p class="no-missed">✓ No missed sessions!</p></div>
+        </div>
+        <div class="card">
+          <h3>⏱ Pomodoro Timer</h3>
+          <div class="pomodoro">
+            <div class="pomo-display" id="pomoDisplay">25:00</div>
+            <div class="pomo-controls">
+              <button class="btn-pomo" onclick="startPomo()">▶ Start</button>
+              <button class="btn-pomo" onclick="resetPomo()">↺ Reset</button>
+            </div>
+            <div class="pomo-status" id="pomoStatus">Focus session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PROGRESS ── -->
+  <section id="tab-progress" class="tab-content">
+    <h2>Progress &amp; Analytics</h2>
+    <div class="progress-top" style="margin-top:22px">
+      <div class="card gauge-card">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 120 120" class="gauge-svg" id="gaugeSvg">
+            <circle cx="60" cy="60" r="50" class="gauge-bg"/>
+            <circle cx="60" cy="60" r="50" class="gauge-fill" id="gaugeFill" stroke-dasharray="0 314"/>
+          </svg>
+          <div class="gauge-center">
+            <div class="gauge-pct" id="gaugePct">0%</div>
+            <div class="gauge-grade" id="gaugeGrade">—</div>
+          </div>
+        </div>
+        <div class="gauge-label">Productivity Score</div>
+        <div class="gauge-msg" id="gaugeMsg"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="card stat-card"><div class="stat-icon">📚</div><div class="stat-value" id="statTotal">0h</div><div class="stat-label">Total Hours</div></div>
+        <div class="card stat-card"><div class="stat-icon">✅</div><div class="stat-value green" id="statDone">0h</div><div class="stat-label">Completed</div></div>
+        <div class="card stat-card"><div class="stat-icon">❌</div><div class="stat-value red" id="statMissed">0</div><div class="stat-label">Missed Sessions</div></div>
+        <div class="card stat-card"><div class="stat-icon">✓</div><div class="stat-value teal" id="statDoneSessions">0</div><div class="stat-label">Done Sessions</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <h3>Subject Breakdown</h3>
+      <div id="subjectBreakdown" class="subject-breakdown"></div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <h3>📋 Daily Task Summary</h3>
+      <div id="weeklySummary" class="weekly-summary"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>
+  // Theme toggle
+  (function(){
+    const saved = localStorage.getItem('studyai-theme');
+    if(saved === 'light') document.documentElement.setAttribute('data-theme','light');
+  })();
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+    localStorage.setItem('studyai-theme', isLight ? 'dark' : 'light');
+  });
+</script>
+</body>
+</html>

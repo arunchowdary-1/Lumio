@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LumioAI — Create Account</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="auth-body">
+
+  <!-- Theme toggle -->
+  <button class="theme-toggle" id="themeBtn" style="position:fixed;top:20px;right:20px;z-index:500" title="Toggle theme">
+    <span class="th-dk">🌙</span>
+    <span class="th-lt">☀️</span>
+  </button>
+
+  <div class="auth-card" style="max-width:480px">
+
+    <div class="auth-logo">
+      <div class="auth-logo-icon">L</div>
+      <div class="auth-logo-text">
+        <div class="auth-logo-name">Lumio</div>
+        <div class="auth-logo-sub">Smart Planner</div>
+      </div>
+    </div>
+
+    <h1 class="auth-title">Create your account ✦</h1>
+    <p class="auth-sub">Join StudyAI and get a personalized AI-generated study plan tailored to your deadlines and goals.</p>
+
+    {% if error %}
+    <div class="auth-error" style="margin-bottom:16px">
+      <span>⚠</span><span>{{ error }}</span>
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="auth-success" style="margin-bottom:16px">
+      <span>✓</span>
+      <span>{{ success }} <a href="/login" style="color:var(--green);font-weight:700">Sign in now →</a></span>
+    </div>
+    {% endif %}
+
+    <form class="auth-form" method="POST" action="/register" onsubmit="return validateForm()">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="auth-field">
+          <label>Username</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">◈</span>
+            <input type="text" name="username" id="regUsername"
+              placeholder="e.g. john_doe" autocomplete="username"
+              oninput="checkUsername(this.value)" required/>
+          </div>
+          <div class="strength-text" id="usernameHint"></div>
+        </div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">@</span>
+            <input type="email" name="email" placeholder="you@email.com"
+              autocomplete="email" required/>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="auth-input-wrap">
+          <span class="auth-input-icon">◉</span>
+          <input type="password" name="password" id="regPassword"
+            placeholder="At least 6 characters"
+            autocomplete="new-password"
+            oninput="checkStrength(this.value)" required/>
+          <button type="button" class="password-toggle" onclick="togglePass('regPassword',this)">👁</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-text" id="strengthText">Enter a password</div>
+      </div>
+
+      <div class="auth-field">
+        <label>Confirm Password</label>
+        <div class="auth-input-wrap">
+          <span class="auth-input-icon">◉</span>
+          <input type="password" name="password2" id="regPassword2"
+            placeholder="Repeat your password"
+            autocomplete="new-password"
+            oninput="checkMatch()" required/>
+          <button type="button" class="password-toggle" onclick="togglePass('regPassword2',this)">👁</button>
+        </div>
+        <div class="strength-text" id="matchText"></div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-3);line-height:1.55;margin-top:-2px">
+        By creating an account you agree that your data is stored locally in SQLite and never shared.
+      </p>
+
+      <button type="submit" class="auth-btn">
+        <span>Create Account</span>
+        <span>→</span>
+      </button>
+
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-link-row">
+      Already have an account? <a href="/login">Sign in →</a>
+    </div>
+
+  </div>
+
+  <script>
+    (function(){ const s=localStorage.getItem('studyai-theme'); if(s==='light') document.documentElement.setAttribute('data-theme','light'); })();
+    document.getElementById('themeBtn').addEventListener('click',function(){
+      const l=document.documentElement.getAttribute('data-theme')==='light';
+      document.documentElement.setAttribute('data-theme',l?'':'light');
+      localStorage.setItem('studyai-theme',l?'dark':'light');
+    });
+    function togglePass(id,btn){
+      const i=document.getElementById(id);
+      if(i.type==='password'){i.type='text';btn.textContent='🙈';}
+      else{i.type='password';btn.textContent='👁';}
+    }
+    function checkUsername(val){
+      const h=document.getElementById('usernameHint');
+      if(!val){h.textContent='';return;}
+      if(val.length<3){h.style.color='#f5706a';h.textContent='✕ Too short (min 3 chars)';}
+      else if(/\s/.test(val)){h.style.color='#f5706a';h.textContent='✕ No spaces allowed';}
+      else{h.style.color='#3fd4a0';h.textContent='✓ Looks good!';}
+    }
+    function checkStrength(val){
+      const fill=document.getElementById('strengthFill');
+      const text=document.getElementById('strengthText');
+      let score=0;
+      if(val.length>=6)score++;
+      if(val.length>=10)score++;
+      if(/[A-Z]/.test(val))score++;
+      if(/[0-9]/.test(val))score++;
+      if(/[^A-Za-z0-9]/.test(val))score++;
+      const cfgs=[
+        {w:'0%',c:'transparent',t:'Enter a password'},
+        {w:'20%',c:'#f5706a',t:'Very weak'},
+        {w:'40%',c:'#f5706a',t:'Weak'},
+        {w:'60%',c:'#f5d76e',t:'Fair'},
+        {w:'80%',c:'#3fd4a0',t:'Strong'},
+        {w:'100%',c:'#3fd4a0',t:'Very strong 💪'},
+      ];
+      const c=cfgs[Math.min(score,5)];
+      fill.style.width=c.w; fill.style.background=c.c;
+      text.textContent=c.t; text.style.color=c.c;
+      checkMatch();
+    }
+    function checkMatch(){
+      const p1=document.getElementById('regPassword').value;
+      const p2=document.getElementById('regPassword2').value;
+      const t=document.getElementById('matchText');
+      if(!p2){t.textContent='';return;}
+      if(p1===p2){t.style.color='#3fd4a0';t.textContent='✓ Passwords match';}
+      else{t.style.color='#f5706a';t.textContent='✕ Passwords do not match';}
+    }
+    function validateForm(){
+      const p1=document.getElementById('regPassword').value;
+      const p2=document.getElementById('regPassword2').value;
+      const un=document.getElementById('regUsername').value;
+      if(un.length<3){alert('Username must be at least 3 characters.');return false;}
+      if(p1.length<6){alert('Password must be at least 6 characters.');return false;}
+      if(p1!==p2){alert('Passwords do not match.');return false;}
+      return true;
+    }
+  </script>
+</body>
+</html>

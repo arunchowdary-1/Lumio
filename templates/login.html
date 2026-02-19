@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LumioAI — Sign In</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="auth-body">
+
+  <!-- Theme toggle (top-right corner) -->
+  <button class="theme-toggle" id="themeBtn" style="position:fixed;top:20px;right:20px;z-index:500" title="Toggle theme">
+    <span class="th-dk">🌙</span>
+    <span class="th-lt">☀️</span>
+  </button>
+
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="auth-logo-icon">S</div>
+      <div class="auth-logo-text">
+        <div class="auth-logo-name">Lumio</div>
+        <div class="auth-logo-sub">smart Planner</div>
+      </div>
+    </div>
+
+    <h1 class="auth-title">Welcome back 👋</h1>
+    <p class="auth-sub">Sign in to access your personalized AI study schedule and track your progress.</p>
+
+    <div class="auth-features">
+      <div class="auth-feature">✦ AI Timetable</div>
+      <div class="auth-feature">◉ Progress Tracking</div>
+      <div class="auth-feature">🍅 Pomodoro Timer</div>
+    </div>
+
+    {% if error %}
+    <div class="auth-error" style="margin-bottom:16px">
+      <span>⚠</span><span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+    <form class="auth-form" method="POST" action="/login">
+
+      <div class="auth-field">
+        <label>Username or Email</label>
+        <div class="auth-input-wrap">
+          <span class="auth-input-icon">◈</span>
+          <input type="text" name="identifier" placeholder="Enter your username or email"
+            autocomplete="username" required/>
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="auth-input-wrap">
+          <span class="auth-input-icon">◉</span>
+          <input type="password" name="password" id="loginPassword"
+            placeholder="Enter your password" autocomplete="current-password" required/>
+          <button type="button" class="password-toggle" onclick="togglePass('loginPassword',this)">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn">
+        <span>Sign In</span>
+        <span>→</span>
+      </button>
+
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-link-row">
+      Don't have an account? <a href="/register">Create one free →</a>
+    </div>
+
+  </div>
+
+  <script>
+    // Theme restore
+    (function(){ const s=localStorage.getItem('studyai-theme'); if(s==='light') document.documentElement.setAttribute('data-theme','light'); })();
+    document.getElementById('themeBtn').addEventListener('click',function(){
+      const l=document.documentElement.getAttribute('data-theme')==='light';
+      document.documentElement.setAttribute('data-theme',l?'':'light');
+      localStorage.setItem('studyai-theme',l?'dark':'light');
+    });
+    function togglePass(id,btn){
+      const i=document.getElementById(id);
+      if(i.type==='password'){i.type='text';btn.textContent='🙈';}
+      else{i.type='password';btn.textContent='👁';}
+    }
+  </script>
+</body>
+</html>
