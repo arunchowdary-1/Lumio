@@ -1,4 +1,4 @@
-# 📚 StudyAI — Intelligent Study Planner
+# 📚 LumioAi-Smart Planner
 
 A full-stack AI-powered study planner built with **HTML + CSS + JavaScript** (frontend) and **Python Flask + SQLite** (backend).
 
@@ -123,3 +123,6 @@ settings  (key, value)
 | Backend | Python 3.x + Flask |
 | Database | SQLite (via Python `sqlite3` module) |
 | Fonts | Google Fonts (Syne + DM Sans) |
+
+## 🚀 Live Demo
+https://lumio-p6cs.onrender.com
